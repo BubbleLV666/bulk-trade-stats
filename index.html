@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bulk Trade Stats</title>
+<meta name="description" content="Unofficial trading statistics for Bulk Exchange: PnL, volume, fees, positions, funding, maker/taker. Enter a Solana wallet address.">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta name="theme-color" content="#111110">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><img class="blogo" src="bulk-logo.png" alt="BULK" width="62" height="28"><h1>Trade Stats</h1><span class="badge">unofficial</span></div>
+    <span id="plat" class="plat" hidden>Platform 24h volume <b id="platVol" class="num">—</b> <i>·</i> OI <b id="platOi" class="num">—</b></span>
+    <span class="sp"></span>
+    <button id="btnShare" class="btn primary" title="Create a stats image (PNG) to share, e.g. in Discord">🖼 Create stats image</button>
+    <button id="btnCards" class="btn" aria-expanded="false">Cards ⚙</button>
+    <button id="btnTheme" class="btn" title="Theme">◐</button>
+  </header>
+
+  <form id="form" class="search" autocomplete="off">
+    <input id="addr" type="text" spellcheck="false" placeholder="Solana wallet address (base58)…" aria-label="Wallet address" autocomplete="off">
+    <select id="sub" aria-label="Account" title="Master account or sub-account"><option value="">master account</option></select>
+    <button class="btn primary" type="submit">Show</button>
+    <label class="chk autoref" title="Reload the data every 60 seconds"><input type="checkbox" id="auto"> auto-refresh 60 s</label>
+  </form>
+  <div id="recent" class="recent"></div>
+  <div class="periodbar" id="periodbar" aria-label="Period"></div>
+  <div class="pnote" id="pnote"></div>
+  <div class="custom" id="custom" hidden>
+    <label>from (GMT) <input type="text" id="pf" placeholder="YYYY-MM-DD HH:MM" maxlength="16" autocomplete="off" spellcheck="false"></label>
+    <label>to (GMT) <input type="text" id="pt" placeholder="YYYY-MM-DD HH:MM" maxlength="16" autocomplete="off" spellcheck="false"></label>
+    <button class="btn small primary" id="pgo" type="button">Apply</button>
+  </div>
+  <div id="status" class="status" role="status"></div>
+
+  <div id="cardsPanel" class="panel" hidden>
+    <div class="panel-h"><b>Cards to show</b>
+      <button class="btn small" id="cardsAll">all</button><button class="btn small" id="cardsNone">none</button><button class="btn small" id="cardsReset">default</button></div>
+    <div id="cardsList" class="cardslist"></div>
+  </div>
+
+  <main id="out" class="out"></main>
+
+  <section id="welcome" class="welcome">
+    <h2>Trading stats for any address on Bulk</h2>
+    <p>Paste a Bulk (Solana) wallet address. The site queries the public Bulk API directly from your browser and shows margin, PnL, volume, fees, open positions with liquidation prices, maker/taker split, per-market breakdown, funding, closed-position history, holding time and deposits/withdrawals. No keys or sign-in needed; the address is sent nowhere except the Bulk API.</p>
+    <p class="muted">Challenger Aura comes from a saved snapshot of the public Aura leaderboard (aura.json), because app.bulk.trade does not allow other sites to read it live. The snapshot date is shown on the card.</p>
+  </section>
+
+  <section id="auraBlock" class="card w12 aurablock" hidden>
+    <h2>Challenger Aura · season 1 by week</h2>
+    <div id="auraHead" class="aurahead"></div>
+    <div id="auraWeeks"></div>
+    <p class="note" id="auraNote"></p>
+  </section>
+
+  <section id="auraAll" class="card w12 aurablock" hidden>
+    <h2>Aura · whole history, every week</h2>
+    <div id="auraAllHead" class="aurahead"></div>
+    <div id="auraAllTable"></div>
+    <p class="note" id="auraAllNote"></p>
+  </section>
+
+  <footer>
+    Unofficial project, not affiliated with Bulk. Data comes from the public API <code>mainnet-api1.bulk.trade</code>; it may lag or contain errors.
+    Not financial advice. <span id="ver"></span>
+  </footer>
+</div>
+<dialog id="shareDlg" class="sharedlg"><div class="shwrap">
+  <div class="shhead"><b class="shtitle">CREATE STATS IMAGE · PNG FOR DISCORD</b><span class="sp"></span><button class="btn small" id="shClose" aria-label="Close">✕</button></div>
+  <div class="shbody">
+    <div class="shform">
+      <p class="shnote shinfo">The card follows the period selected on the page and never contains the wallet address or balances.</p>
+      <label>Display name<input id="shName" type="text" placeholder="Bulk Trade Stats" maxlength="28"></label>
+      <label class="chk"><input type="checkbox" id="shPnl" checked> show profit / loss</label>
+      <div class="shbg"><span>Background image <small>(optional)</small></span>
+        <div class="shbgrow"><button class="btn small" id="shBgBtn" type="button">Choose image…</button><button class="btn small" id="shBgClear" type="button">remove</button></div>
+        <input id="shBg" type="file" accept="image/*" hidden>
+        <label class="shdim">Dimming <input id="shDim" type="range" min="0" max="85" value="55"><span id="shDimV">55%</span></label></div>
+      <div class="shbtns"><button class="btn primary" id="shDl">Download PNG</button><button class="btn" id="shCopy">Copy image</button></div>
+      <div class="shnote" id="shMsg"></div>
+    </div>
+    <div class="shprev"><div class="shscroll"><canvas id="shCv" width="720" height="486" style="width:720px;height:486px"></canvas></div></div>
+  </div>
+</div></dialog>
+<script src="app.js"></script>
+</body>
+</html>
