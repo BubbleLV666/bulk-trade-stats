@@ -115,7 +115,18 @@ const auraName = k => { let m;
   if (m = /^challenger_week_(\d+)_(\w+)$/.exec(k)) return 'Week ' + m[1] + ' ' + m[2] + wkRange(WK.ch, +m[1]);
   if (m = /^predeposit_referral_week(\d+)$/.exec(k)) return 'Pre-deposit referral wk ' + m[1] + wkRange(WK.pre, +m[1]);
   if (m = /^predeposit_week(\d+)$/.exec(k)) return 'Pre-deposit week ' + m[1] + wkRange(WK.pre, +m[1]);
+  if (m = /^retro_(\w+)$/.exec(k)) return 'Retro: ' + m[1].replace(/_/g, ' ');
+  if (m = /^week(\d+)_(\w+)$/.exec(k)) return 'Week ' + m[1] + ' ' + m[2].replace(/_/g, ' ') + wkRange(WK.pre, +m[1]);
   return k.replace(/_/g, ' '); };
+const AURA_GROUPS = [['retro', 'Retro drop'], ['pre', 'Pre-deposit period'], ['main', 'Season (mainnet from 09/12)']];
+function auraGroups(c) {   // category rows split into retro drop / pre-deposit / season, each block under a line with its subtotal
+  const G = { retro: [], pre: [], main: [] };
+  for (const [k, v] of Object.entries(c || {})) { const tl = auraClass(k)[0]; G[tl === 'other' ? 'main' : tl].push([k, v]); }
+  return AURA_GROUPS.filter(([id]) => G[id].length).map(([id, title]) => {
+    const rows = G[id].sort((x, y) => auraSort(x[0]) - auraSort(y[0]) || x[0].localeCompare(y[0])), sub = rows.reduce((a, r) => a + r[1], 0);
+    return '<hr class="auraline"><div class="row"><span><b>' + title + '</b></span><b class="num">' + fmt(sub, 0) + '</b></div>' + rows.map(([k, v]) => row(auraName(k), fmt(v, 0))).join('');
+  }).join('');
+}
 const auraSort = k => { const m = /(\d+)/.exec(k); return (m ? +m[1] : 0) + (/^predeposit/.test(k) ? -100 : 0); };
 fetch('aura.json').then(r => r.json()).then(j => { AURA = { fetchedAt: j.fetchedAt, total: j.total, rows: j.rows, map: Object.fromEntries(j.rows.map(x => [x.w, x])) }; drawAuraWeeks(); drawAuraAll(); if (S) render(); }).catch(() => { });
 const PERIODS = [['all', 'All time'], ['1d', 'Last 24h'], ['7d', 'Last 7 days'], ['30d', 'Last 30 days'], ['custom', 'Custom range…']];
@@ -275,7 +286,7 @@ CARDS.splice(3, 0, { id: 'aura', title: 'Challenger Aura', w: 4, sub: () => AURA
   if (!a) return empty('This wallet is not in the Challenger leaderboard snapshot (' + fmt(AURA.total, 0) + ' wallets).');
   const cats = Object.entries(a.c || {}).sort((x, y) => auraSort(x[0]) - auraSort(y[0]) || x[0].localeCompare(y[0]));
   return `<div class="big num">${fmt(a.a, 0)}</div><div class="rows">` + row('Rank', `#${fmt(a.r, 0)} <small>of ${fmt(AURA.total, 0)}</small>`) + row('League', esc(a.l || '—') + (a.tp ? ` <small>top ${fmt(a.tp, 1)}%</small>` : '')) + row('Trading Aura', fmt(a.t, 0)) + row('Other Aura', fmt(a.a - a.t, 0), 'Bonus categories such as boosts, the weekly gauntlet and pre-deposit weeks.') +
-    `</div><div class="rows" style="margin-top:12px">` + cats.map(([k, v]) => row(auraName(k), fmt(v, 0))).join('') + `</div>`;
+    `</div><div class="rows" style="margin-top:12px">` + auraGroups(a.c) + `</div>`;
 } });
 const DEFAULT_ON = CARDS.map(c => c.id);
 let enabled = new Set(store.get('bulk.cards', DEFAULT_ON).filter(id => CARDS.some(c => c.id === id)));
